@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -20,14 +19,14 @@ import static java.util.stream.Collectors.toMap;
 public class GenerationContext {
 
     private static final String OPTION_YEAR = "year";
-    private static final String OPTION_NAME = "name";
+    private static final String OPTION_NAME = "names";
     private static final String OPTION_COUNTRY = "country";
     private static final String OPTION_COUNTY = "county";
 
     private final Year currentYear = Year.now();
     private final Year nextYear = currentYear.plusYears(1);
     private final Year year;
-    private final String name;
+    private final String[] names;
     private final Map<Month, List<Day>> daysInMonth = new LinkedHashMap<>();
 
     private HolidayManager holydayManager;
@@ -38,7 +37,10 @@ public class GenerationContext {
      */
     public GenerationContext(Map<String, String> optionMap) {
         this.year = Year.parse(optionMap.getOrDefault(OPTION_YEAR, String.valueOf(nextYear.getValue())));
-        this.name = optionMap.getOrDefault(OPTION_NAME, "Unbekannt");
+
+        String nameList = optionMap.getOrDefault(OPTION_NAME, "Unbekannt");
+        //allow generation for more than one user
+        this.names = nameList.split(",");
 
         //is used currently in mecklenburg vorpommerania
         String county = optionMap.getOrDefault(OPTION_COUNTY,"mv");

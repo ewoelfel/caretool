@@ -7,14 +7,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import static java.util.stream.Stream.*;
 
@@ -37,7 +39,7 @@ public class DocumentHandler {
     private XSSFWorkbook exportWorkbook;
 
 
-    public String generateDocument(GenerationContext context) throws IOException {
+    public int generateDocuments(GenerationContext context) throws IOException {
 
         this.context = context;
 
@@ -49,9 +51,20 @@ public class DocumentHandler {
 
         createTabs();
 
-        String filename = String.format("Schichtplan %s %d.xlsx", context.getName(), context.getYear().getValue());
-        exportWorkbook(filename);
-        return filename;
+        String firstFileName = String.format("Schichtplan %s %d.xlsx", context.getNames()[0], context.getYear().getValue());
+            exportWorkbook(firstFileName);
+
+            //copy the other ones
+        of(context.getNames()).skip(1).forEach(name -> {
+            String fileToCopyTo = String.format("Schichtplan %s %d.xlsx", name, context.getYear().getValue());
+            try {
+                Files.copy(Paths.get(firstFileName), Paths.get(fileToCopyTo), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return context.getNames().length;
     }
 
     private void createTabs() {
@@ -119,20 +132,6 @@ public class DocumentHandler {
         }
         exportWorkbook.getCTWorkbook().getSheets().getSheetArray(month.getValue()).setName(sheetName);
         logger.info("generated :" + month);
-    }
-
-    private void generateConditionalFormatting(XSSFSheet sheet) {
-
-        XSSFSheetConditionalFormatting tplCF = tplMonthSheet.getSheetConditionalFormatting();
-        XSSFSheetConditionalFormatting cf = sheet.getSheetConditionalFormatting();
-        for (int i = 0; i < tplCF.getNumConditionalFormattings(); i++) {
-            XSSFConditionalFormatting conditionalFormattingAt = tplCF.getConditionalFormattingAt(i);
-            XSSFConditionalFormattingRule rule = conditionalFormattingAt.getRule(0);
-            XSSFPatternFormatting patternFormatting = rule.getPatternFormatting();
-            patternFormatting.setFillBackgroundColor(IndexedColors.YELLOW.index);
-            patternFormatting.setFillPattern(PatternFormatting.SOLID_FOREGROUND);
-            cf.addConditionalFormatting(conditionalFormattingAt.getFormattingRanges(), rule);
-        }
     }
 
     private void setCellStyleByColumnNumForMonth(int col, XSSFCellStyle cellStyle) {

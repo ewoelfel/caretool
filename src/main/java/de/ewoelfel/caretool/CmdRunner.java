@@ -5,10 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import static java.util.stream.Collectors.toMap;
@@ -29,8 +27,8 @@ public class CmdRunner implements ApplicationRunner {
 
         GenerationContext context = new GenerationContext(optionMap);
         //create document based on template
-        String documentName = documentHandler.generateDocument(context);
-        logger.info("done generating "+ documentName);
-        System.exit(1);
+        int documentCount = documentHandler.generateDocuments(context);
+        logger.info("done generating {} documents", documentCount);
+        System.exit(0);
     }
 }
