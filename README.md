@@ -13,7 +13,7 @@ To generate the jar
 
 Execute the jar
 ```
-java -jar build/libs/caretool.jar -name Erik -year 2019
+java -jar build/libs/caretool.jar --names=Foo,Bar --year=2019
 
 ```
 
