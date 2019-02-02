@@ -1,5 +1,6 @@
 package de.ewoelfel.caretool;
 
+import org.apache.poi.hssf.usermodel.HSSFPrintSetup;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.Logger;
@@ -24,8 +25,8 @@ import static java.util.stream.Stream.*;
 public class DocumentHandler {
 
     private static final int SPECIALTY_COLUMN = 9;
-    private static final String TPL_NEXT_YEAR = "2018";
-    private static final String TPL_CURRENT_YEAR = "2017";
+    private static final String TPL_PREV_YEAR = "2017";
+    private static final String TPL_CURRENT_YEAR = "2018";
     private static final Logger logger = LoggerFactory.getLogger(CmdRunner.class);
 
     private final InputStream templateAsStream = DocumentHandler.class.getResourceAsStream("/caretool_template.xlsx");
@@ -51,12 +52,12 @@ public class DocumentHandler {
 
         createTabs();
 
-        String firstFileName = String.format("Schichtplan %s %d.xlsx", context.getNames()[0], context.getYear().getValue());
+        String firstFileName = String.format("%s Schichtplan %d.xlsx", context.getNames()[0], context.getYear().getValue());
             exportWorkbook(firstFileName);
 
             //copy the other ones
         of(context.getNames()).skip(1).forEach(name -> {
-            String fileToCopyTo = String.format("Schichtplan %s %d.xlsx", name, context.getYear().getValue());
+            String fileToCopyTo = String.format("%s Schichtplan %d.xlsx", name, context.getYear().getValue());
             try {
                 Files.copy(Paths.get(firstFileName), Paths.get(fileToCopyTo), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
@@ -124,12 +125,21 @@ public class DocumentHandler {
                                 cell.setCellValue(tplCell.getNumericCellValue());
                             }
                             break;
-                        default:
+                        case Cell.CELL_TYPE_FORMULA:
+                            if(row <= 31 && !isDayInMonth) {
+                                cell.setCellType(Cell.CELL_TYPE_STRING);
+                                cell.setCellValue("");
+                            }
+                            default:
                     }
                     cell.setCellStyle(cellStyle);
                 }
             }
         }
+        //set page setup to fit to one page width but multiple pages height
+        sheet.getPrintSetup().setScale((short)60);
+        sheet.getPrintSetup().setLandscape(true);
+        sheet.getPrintSetup().setPaperSize(HSSFPrintSetup.A4_PAPERSIZE);
         exportWorkbook.getCTWorkbook().getSheets().getSheetArray(month.getValue()).setName(sheetName);
         logger.info("generated :" + month);
     }
@@ -178,12 +188,12 @@ public class DocumentHandler {
                         case XSSFCell.CELL_TYPE_STRING:
                             String textToAdd;
                             textToAdd = tplCell.getStringCellValue()
-                                    .replace(TPL_NEXT_YEAR, context.getNextYear().getValue() + "")
-                                    .replace(TPL_CURRENT_YEAR, context.getCurrentYear().getValue() + "");
+                                    .replace(TPL_CURRENT_YEAR, context.getCurrentYear().getValue() + "")
+                                    .replace(TPL_PREV_YEAR, context.getPreviousYear().getValue() + "");
                             cell.setCellValue(textToAdd);
                             break;
                         case Cell.CELL_TYPE_FORMULA:
-                            if (row > 7 && row != 16 && row != 12 && col > 0) {
+                            if (row > 7 && row != 15 && row != 12 && col > 0) {
                                 setSummaryFormulaByPosition(tplCell, cell, sheetName);
 
                             } else {
@@ -212,7 +222,7 @@ public class DocumentHandler {
     }
 
     private void setSummaryFormulaByPosition(XSSFCell tplCell, XSSFCell cell, String sheetName) {
-        int rowNum = tplCell.getRowIndex() >= 13 ? tplCell.getRowIndex() + 25 : tplCell.getRowIndex() + 26;
+        int rowNum = tplCell.getRowIndex() >= 13 ? tplCell.getRowIndex() + 24 : tplCell.getRowIndex() + 25;
         cell.setCellFormula(String.format("'%s'!H%d", sheetName, rowNum));
     }
 

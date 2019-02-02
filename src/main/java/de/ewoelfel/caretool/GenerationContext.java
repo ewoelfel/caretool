@@ -24,6 +24,7 @@ public class GenerationContext {
     private static final String OPTION_COUNTY = "county";
 
     private final Year currentYear = Year.now();
+    private final Year previousYear = currentYear.minusYears(1);
     private final Year nextYear = currentYear.plusYears(1);
     private final Year year;
     private final String[] names;
