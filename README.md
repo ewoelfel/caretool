@@ -23,6 +23,6 @@ java -jar build/libs/caretool.jar --names=Foo,Bar --year=2019
 - cmd interface to create the timetable
 
 ## upcoming features
-- UI to easyly generate the timetable
+- UI to easily generate the timetable
 
 
