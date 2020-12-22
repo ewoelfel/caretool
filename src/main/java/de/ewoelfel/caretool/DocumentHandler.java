@@ -52,6 +52,9 @@ public class DocumentHandler {
 
         createTabs();
 
+        //remove template sheet
+        exportWorkbook.removeSheetAt(1);
+
         String firstFileName = String.format("%s Schichtplan %d.xlsx", context.getNames()[0], context.getYear().getValue());
             exportWorkbook(firstFileName);
 
@@ -140,7 +143,7 @@ public class DocumentHandler {
         sheet.getPrintSetup().setScale((short)60);
         sheet.getPrintSetup().setLandscape(true);
         sheet.getPrintSetup().setPaperSize(HSSFPrintSetup.A4_PAPERSIZE);
-        exportWorkbook.getCTWorkbook().getSheets().getSheetArray(month.getValue()).setName(sheetName);
+        exportWorkbook.getCTWorkbook().getSheets().getSheetArray(month.getValue()+1).setName(sheetName);
         logger.info("generated :" + month);
     }
 
